@@ -35,10 +35,10 @@ Users can search for books, fetch metadata, upload reference text/PDFs, choose a
 ```
 book-agent/
 └─ packages/
-├─ backend/        # Python FastAPI + Strawberry GraphQL
-├─ web-next/       # Next.js Web App
-├─ mobile/         # Expo React Native App
-└─ shared/         # Shared GraphQL queries, types, utils
+ ├─ backend/        # Python FastAPI + Strawberry GraphQL
+ ├─ web-next/       # Next.js Web App
+ ├─ mobile/         # Expo React Native App
+ └─ shared/         # Shared GraphQL queries, types, utils
 ```
 
 ---
