@@ -6,10 +6,19 @@ import strawberry
 from strawberry.file_uploads import Upload
 
 from .providers.books import search_google_books
-from .providers.llms import call_openai
+from .providers.llms import generate_text
+import os
+import asyncio
+from typing import List, Optional
+
+import strawberry
+from strawberry.file_uploads import Upload
+
+from .providers.books import search_google_books
+from .providers.llms import generate_text
 from .utils.pdf_utils import extract_text_from_pdf_bytes
 
-# --- Simple env config (no BaseSettings) ---
+# Env config
 PROMPT_PREFIX = os.getenv("PROMPT_PREFIX", "You are an expert book reviewer.")
 PROMPT_POSTFIX = os.getenv("PROMPT_POSTFIX", "Keep it concise and helpful.")
 try:
@@ -17,7 +26,6 @@ try:
 except Exception:
     MAX_UPLOAD_MB = 8
 
-# --- GraphQL types ---
 @strawberry.type
 class BookMeta:
     title: str
@@ -32,27 +40,24 @@ class ReviewResult:
 
 @strawberry.input
 class GenerateInput:
+    provider: str = "openai"
+    modelName: Optional[str] = None
     title: Optional[str] = None
     authors: Optional[List[str]] = None
     spoiler: bool = False
-    model: Optional[str] = "openai"
 
-# --- Resolvers ---
 @strawberry.type
 class Query:
     @strawberry.field
     async def searchBooks(self, query: str) -> List[BookMeta]:
         items = await search_google_books(query)
-        return [
-            BookMeta(
-                title=i.get("title") or "",
-                authors=i.get("authors") or [],
-                description=i.get("description"),
-                publishedDate=i.get("publishedDate"),
-                thumbnail=i.get("thumbnail"),
-            )
-            for i in items
-        ]
+        return [BookMeta(
+            title=i.get("title") or "",
+            authors=i.get("authors") or [],
+            description=i.get("description"),
+            publishedDate=i.get("publishedDate"),
+            thumbnail=i.get("thumbnail")
+        ) for i in items]
 
 @strawberry.type
 class Mutation:
@@ -79,8 +84,7 @@ class Mutation:
         ]
         prompt = "\n\n".join([p for p in prompt_parts if p])
 
-        review_text = await call_openai(prompt)
-
+        review_text = await generate_text(prompt, provider=input.provider, model=input.modelName)
         return ReviewResult(review=review_text)
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)

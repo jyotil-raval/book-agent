@@ -1,10 +1,11 @@
 import os
-import httpx
 from typing import List
+import httpx
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 async def search_google_books(q: str, max_results: int = 5) -> List[dict]:
+    """Search Google Books and return simplified metadata list."""
     url = "https://www.googleapis.com/books/v1/volumes"
     params = {"q": q, "maxResults": max_results}
     if GOOGLE_API_KEY:
